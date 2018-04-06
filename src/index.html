@@ -5,8 +5,110 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Voting System</title>
+    <title>Transport demo</title>
+ <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+ </style>
+    <script>
+      // This example requires the Places library. Include the libraries=places
+      // parameter when you first load the API. For example:
+      // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"> 
+      //import { default as Web3} from 'web3';  
+      //var Web3 = require("Web3");
+      
+      var map;
+      var infowindow;
 
+      function initMap() {
+	var ueno = {lat: 35.71547, lng: 139.77402};
+
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: ueno,
+          zoom: 13 
+        });
+
+        infowindow = new google.maps.InfoWindow();
+        var service = new google.maps.places.PlacesService(map);
+        service.nearbySearch({
+          location: ueno,
+          radius: 3000,
+          name: ['YAMATO Transport']
+          //name: ['ヤマト運輸']
+        }, callback);
+      }
+
+      function callback(results, status) {
+	var o = [];
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+	     //App.deployCenters(results.length);
+          for (var i = 0; i < results.length; i++){o.push(Math.random() * 10 + 5);}
+          for (var i = 0; i < results.length; i++) {
+            for (var j = i + 1; j < results.length; j++) {
+	      if (getDistance(results[i], results[j]) < 1000){drawline(results[i], results[j]);
+			//if((o[i] - o[j]) > 3){ o[i]--;o[j]++;}
+			//if((o[j] - o[i]) > 3){ o[j]--;o[i]++;}
+		}
+		}
+          }
+          for (var i = 0; i < results.length; i++) {
+		createMarker(results[i], 20 * o[i]);
+	}
+	}
+      }
+
+      var rad = function(x) {
+  	return x * Math.PI / 180;
+      };
+
+      var getDistance = function(p1, p2) {
+  	var R = 6378137; // Earth’s mean radius in meter
+  	var dLat = rad(p2.geometry.location.lat() - p1.geometry.location.lat());
+  	var dLong = rad(p2.geometry.location.lng() - p1.geometry.location.lng());
+  	var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(rad(p1.geometry.location.lat())) * Math.cos(rad(p2.geometry.location.lat())) *
+        Math.sin(dLong / 2) * Math.sin(dLong / 2);
+  	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  	var d = R * c;
+  	return d; // returns the distance in meter
+      };
+
+      function drawline(place1, place2) {
+      var line = new google.maps.Polyline({
+        path: [place1.geometry.location, place2.geometry.location],
+	strokeColor: '#FF0000',
+        strokeOpacity: 0.3,
+        strokeWeight: 10,
+        map: map
+      });
+      }
+
+      function createMarker(place, rad) {
+          var CenterCircle = new google.maps.Circle({
+            strokeColor: '#FF0000',
+            strokeOpacity: 1,
+            strokeWeight: 1,
+            fillColor: '#FF0000',
+            fillOpacity: 0.5,
+            map: map,
+            center: place.geometry.location,
+            radius: rad
+          });
+          google.maps.event.addListener(CenterCircle, 'click', function() {
+          infowindow.setContent(place.name);
+          infowindow.open(map, this);
+        });
+      }
+    </script>
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
@@ -20,6 +122,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </head>
   <body>
+    <div id="map"></div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPm-psSYd5kMPKuoH5vcPH2uuyoDXrlLE&libraries=geometry,places&callback=initMap" async defer></script>
     <div class="container">
       <div class="row">
         <div class="col-xs-12 col-sm-8 col-sm-push-2">
@@ -48,7 +152,7 @@
       </div>
 
     </div>
-
+<!--
     <div id="proposalTemplate" style="display:none;">
       <div class="row">
         <div class="col-xs-12">
@@ -85,7 +189,7 @@
       <hr/>
       <br/>
     </div>
-
+    -->
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->

@@ -30,6 +30,20 @@ App = {
       // Use our contract to retrieve value data
       App.getProposals();
     });
+    $.getJSON('TransportHeadquarter.json', function(data) {
+      // Get the necessary contract artifact file and instantiate it with truffle-contract
+      App.contracts.TransportHeadquarter = TruffleContract(data);
+      // Set the provider for our contract
+      App.contracts.TransportHeadquarter.setProvider(App.web3Provider);
+      // Use our contract to retrieve value data
+    });
+    $.getJSON('TransportCenter.json', function(data) {
+      // Get the necessary contract artifact file and instantiate it with truffle-contract
+      App.contracts.TransportCenter = TruffleContract(data);
+      // Set the provider for our contract
+      App.contracts.TransportCenter.setProvider(App.web3Provider);
+      // Use our contract to retrieve value data
+    });
     return App.bindEvents();
   },
 
@@ -41,14 +55,20 @@ App = {
       App.handleAddProposal(e);
     });
 
-    $(document).on('click', '.btn-vote', function(e) {
-      var $this = $(this);
-      $this.button('loading');
-      App.handleAddVote(e);
-    });
-
   },
-
+    deployCenters: function(howmany) {
+    web3.eth.getAccounts(function(error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+      var account = accounts[0];
+      App.contracts.TransportHeadquarter.deployed().then(function(instance) {
+      console.log("yeast of thoughts and minds");
+      headquarterInstance = instance;
+      headquarterInstance.mintTransportCenter(10, {from: account});
+      });
+    });
+  },
   getProposals: function() {
     var proposalsInstance;
     web3.eth.getAccounts(function(error, accounts) {
@@ -92,14 +112,25 @@ App = {
   handleAddProposal: function(event) {
     event.preventDefault();
     var proposalInstance;
+    var headquarterInstance;
     var value = $('.input-value').val();
     web3.eth.getAccounts(function(error, accounts) {
       if (error) {
         console.log(error);
       }
       var account = accounts[0];
+      App.contracts.TransportHeadquarter.deployed().then(function(instance) {
+      console.log("I am the yeast of thoughts and minds");
+      console.log(instance.address);
+      console.log(account);
+      headquarterInstance = instance;
+      headquarterInstance.mintTransportCenter(10, {from: account}).then(function(result) {
+      console.log(result);
+      });
+      });
+      
       App.contracts.Voting.deployed().then(function(instance) {
-        proposalInstance = instance;
+      	proposalInstance = instance;
         return proposalInstance.addProposal(value, {from: account});
       }).then(function(result) {
         var event = proposalInstance.CreatedProposalEvent();
@@ -112,28 +143,6 @@ App = {
     });
   },
 
-  handleAddVote: function(event) {
-    event.preventDefault();
-    var voteInstance;
-    var voteValue = parseInt($(event.target).data('vote'));
-    var proposalInt = parseInt($(event.target).data('proposal'));
-    web3.eth.getAccounts(function(error, accounts) {
-      if (error) {
-        console.log(error);
-      }
-      var account = accounts[0];
-      App.contracts.Voting.deployed().then(function(instance) {
-        voteInstance = instance;
-        return voteInstance.vote(proposalInt, voteValue, {from: account});
-      }).then(function(result) {
-        var event = voteInstance.CreatedVoteEvent();
-        App.handleEvent(event);
-      }).catch(function(err) {
-        console.log(err.message);
-        $('button').button('reset');
-      });
-    });
-  },
 
   handleEvent: function(event) {
     console.log('Waiting for a event...');
